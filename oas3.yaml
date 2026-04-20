@@ -138,7 +138,6 @@ paths:
                 $ref: '#/components/schemas/interaction_strength'
         '501':
           description: If endpoint is not implemented
-
   '/summary_count/{hetcode}.json':
     get:
       parameters:
@@ -158,7 +157,6 @@ paths:
                 $ref: '#/components/schemas/summary_count'
         '501':
           description: If endpoint is not implemented
-
   '/pisa/assembly/{pdbid}/{assemblyid}':
     get:
       summary: Assembly data per PDB assembly id
@@ -254,6 +252,67 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Interface'
+        '400':
+          description: bad input parameter
+  '/llm_annotations/summary/{pdb_id}.json':
+   get:
+      parameters:
+        - name: pdb_id
+          description: A PDB identifier
+          in: path
+          required: true
+          example: '1cbs'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: >-
+            Response is a collection of LLM annotations for a given PDB entry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/llm_annotations_summary'
+        '501':
+          description: If endpoint is not implemented
+        '400':
+          description: bad input parameter
+  '/llm_annotations/summary/{pdb_id}/{chain_id}/{residue_id}.json':
+   get:
+      parameters:
+        - name: pdb_id
+          description: A PDB identifier
+          in: path
+          required: true
+          example: '1cbs'
+          in: path
+          schema:
+            type: string
+        - name: chain_id
+          description: A chain identifier for structure
+          in: path
+          required: true
+          example: 'A'
+          in: path
+          schema:
+            type: string
+        - name: residue_id
+          description: A chain identifier for structure
+          in: path
+          required: true
+          example: 'ARG11'
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: >-
+            Response is a collection of LLM annotations for specific residue in a selected chain for a given PDB entry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/llm_annotations_chain_residue'
+        '501':
+          description: If endpoint is not implemented
         '400':
           description: bad input parameter
 
@@ -1829,3 +1888,161 @@ components:
                   type: integer
                   example: 1
                   description: "Remark R350"
+
+    llm_annotations_summary:
+      title: llm_annotations_summary
+      type: object
+      description: all LLM-derived annotations for a given PDB entry
+      properties:
+        datatype:
+          type: string
+          example: "ANNOTATIONS"
+          description: "The type of data represented"
+        data:
+          type: array
+          description: List of data annotations.
+          items:
+            $ref: "#/components/schemas/data"
+
+    llm_annotations_chain_residue:
+      title: llm_annotations_chain_residue
+      type: object
+      description: all LLM-derived annotations for a specific residue in a selected chain for a given PDB entry
+      properties:
+        pdb_id:
+          type: string
+          example: "1a2b"
+          description: "PDB identifier"
+        chain_id:
+          type: string
+          example: "A"
+          description: "Chain identifier"
+        residue_id:
+          type: string
+          example: "42"
+          description: "Residue identifier"
+        datatype:
+          type: string
+          example: "ANNOTATIONS"
+          description: "The type of data represented"
+        data:
+          type: array
+          description: List of data annotations.
+          items:
+            $ref: "#/components/schemas/data"
+
+    data:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "IUCr"
+          description: "Name annotation provider"
+        accession:
+          type: string
+          example: "IUCr"
+          description: "A unique identifier for the resource, annotation, etc."
+        residues:
+          type: array
+          description: List of residue objects.
+          items:
+            $ref: "#/components/schemas/residue"
+        additionalData:
+          $ref: "#/components/schemas/additional_data"
+
+    residue:
+      type: object
+      properties:
+        startIndex:
+            type: integer
+            example: 42
+            description: "(start) residue sequence position"
+        endIndex:
+            type: integer
+            example: 42
+            description: "(end) residue sequence position"
+        indexType:
+            type: string
+            nullable: true
+            description: Type of index (PDB or UniProt).
+            enum: ["PDB", "UNIPROT"]
+        startCode:
+          type: string
+          description: Amino acid three-letter code for the start residue.
+          example: "PRO"
+        endCode:
+          type: string
+          description: Amino acid three-letter code for the end residue.
+          example: "PRO"
+
+    additional_data:
+      type: object
+      properties:
+        pubmedId:
+          type: integer
+          description: "A valid PubMed identifier"
+          example: 1234567
+        pmcId:
+          type: string
+          description: "A valid PubMedCentral identifier"
+          example: "PMC1234567"
+        doi:
+          type: string
+          description: "A valid Digital Object Identifier"
+          example: "10.1234/abcd.efgh"
+        primaryCitation:
+          type: string
+          description: "A valid primary citation"
+          example: "Y"
+        openAccess:
+          type: string
+          description: "A valid open access identifier"
+          example: "Y"
+        pdbId:
+          type: string
+          description: "A valid PDB identifier"
+          example: "1a2b"
+        pdbResidue:
+          type: integer
+          description: "A PDB residue"
+          example: 42
+        authorResidueNumber:
+          type: integer
+          description: "An author residue number"
+          example: 42
+        pdbChain:
+          type: string
+          description: "A PDB chain"
+          example: "A"
+        uniprotAccession:
+          type: string
+          description: "A UniProt accession"
+          example: "P12345"
+        uniprotResidue:
+          type: integer
+          description: "A UniProt residue"
+          example: 42
+        sentence:
+          type: string
+          description: "A sentence containing the annotation"
+          example: "This is a sample sentence."
+        section:
+          type: string
+          description: "Section in publication annotation was found"
+          example: "This is a sample section."
+        exact:
+          type: string
+          description: "Exact annotation text"
+          example: "This is a sample exact annotation."
+        entityType:
+          type: string
+          description: "Type of entity (e.g., protein, nucleic acid, etc.)"
+          example: "protein"
+        annotator:
+          type: string
+          description: "Name of the annotator"
+          example: "John Doe"
+        aiScore:
+          type: float
+          description: "AI confidence score for the annotation"
+          example: 0.95
